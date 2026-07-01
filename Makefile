@@ -1,4 +1,4 @@
-.PHONY: up down restart logs stop clean
+.PHONY: up down restart logs stop clean refresh
 
 # Start containers:
 up:
@@ -7,6 +7,12 @@ up:
 # Stop containers:
 down:
 	docker compose down
+
+# Refresh a service: make refresh poller
+refresh:
+	@$(if $(filter-out refresh,$(MAKECMDGOALS)),,\
+		$(error Usage: make refresh <service>  e.g. make refresh poller))
+	docker compose up -d --build $(filter-out refresh,$(MAKECMDGOALS))
 
 # Restart containers:
 restart:
@@ -17,3 +23,6 @@ restart:
 clean:
 	docker compose down -v
 
+# Swallow extra goals from "make refresh <service>"
+%:
+	@:

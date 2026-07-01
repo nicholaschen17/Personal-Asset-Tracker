@@ -1,2 +1,5 @@
 alpaca-py
+psycopg2-binary
 structlog
+fastapi
+uvicorn[standard]
