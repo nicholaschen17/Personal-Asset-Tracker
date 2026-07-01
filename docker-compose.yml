@@ -1,0 +1,43 @@
+services:
+  # DB #1 - PostgreSQL for storing data from API calls
+  postgres_db_1:
+    image: postgres:18
+    container_name: postgres_db_1
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: ${POSTGRES_DB_1_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_DB_1_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB_1_DB}
+    volumes:
+      - postgres_db_1_data:/var/lib/postgresql
+
+  # DB #2 - PostgreSQL for tracking log streaming from DB #1
+  postgres_db_2:
+    image: postgres:18
+    container_name: postgres_db_2
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_USER: ${POSTGRES_DB_2_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_DB_2_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB_2_DB}
+    volumes:
+      - postgres_db_2_data:/var/lib/postgresql
+
+
+  # Poller — started/stopped by scheduler during market hours (not always running).
+  poller:
+    build: ./src/poller
+    depends_on:
+      - postgres_db_1
+    environment:
+      ALPACA_API_KEY_ID: ${ALPACA_API_KEY_ID}
+      ALPACA_API_SECRET_KEY: ${ALPACA_API_SECRET_KEY}
+      POSTGRES_DB_1_URL: postgresql://${POSTGRES_DB_1_USER}:${POSTGRES_DB_1_PASSWORD}@postgres_db_1:5432/${POSTGRES_DB_1_DB}
+      POLLER_RATE_PER_MIN: ${POLLER_RATE_PER_MIN:-200}
+    restart: unless-stopped
+
+volumes:
+  postgres_db_1_data:
+  postgres_db_2_data:
